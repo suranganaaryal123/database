@@ -1,333 +1,171 @@
-DROP TABLE IF EXISTS `STUDENT`;
-CREATE TABLE `STUDENT` (
-    `FirstName` varchar(255) DEFAULT NULL,
-    `LastName` varchar(255) DEFAULT NULL,
-    `Major` varchar(255) DEFAULT NULL,
-    `StudentID` int(11) NOT NULL AUTO_INCREMENT,
-    PRIMARY KEY (`StudentID`)
-) ENGINE=InnoDB;
+/* 2. Write commands for creating tables and inserting values */
 
+/* Create Course table */
+CREATE TABLE Course (
+  course_id INT PRIMARY KEY,
+  department VARCHAR(255),
+  course_number INT,
+  course_name VARCHAR(255),
+  semester VARCHAR(255),
+  year INT
+);
 
+/* Create Student table */
+CREATE TABLE Student (
+  student_id INT PRIMARY KEY,
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
+  course_id INT,
+  FOREIGN KEY (course_id) REFERENCES Course(course_id)
+);
 
+/* Create Assignment table */
+CREATE TABLE Assignment (
+  assignment_id INT PRIMARY KEY,
+  category VARCHAR(255),
+  percentage DECIMAL(5,2),
+  course_id INT,
+  FOREIGN KEY (course_id) REFERENCES Course(course_id)
+);
 
-DROP TABLE IF EXISTS `SCORE`;
-CREATE TABLE `SCORE` (
-    `StudentID` int(11) NOT NULL,
-    `AssignmentID` int(11) NOT NULL,
-    `POINTS` int(11) DEFAULT 0 NOT NULL,
-    PRIMARY KEY (`StudentID`, `AssignmentID`)
-) ENGINE=InnoDB;
+/* Create Grades table */ 
+CREATE TABLE Grades (
+  grade_id INT PRIMARY KEY,
+  assignment_id INT,
+  student_id INT,
+  score DECIMAL(5,2),
+  FOREIGN KEY (assignment_id) REFERENCES 
+  Assignment(assignment_id),
+  FOREIGN KEY (student_id) REFERENCES Student(student_id)
+);
 
+/* Insert values into tables: */
 
+/* Insert values into Course table */
+INSERT INTO Course (course_id, department, course_number, course_name, semester, year)
+VALUES (1, 'CSCI', 432, 'Database Systems', 'Spring', 2024);
 
+/* Insert values into Student table */
+INSERT INTO Student (student_id, first_name, last_name, course_id)
+VALUES (1, 'Jamie', 'Stevens', 1),
+       (2, 'Monae', 'Adams', 1),
+       (3, 'Alliston', 'Dunn', 1),
+       (4, 'Sam', 'McQueen', 1);
 
-DROP TABLE IF EXISTS `ASSIGNMENT`;
-CREATE TABLE `ASSIGNMENT` (
-    `AssignmentID` int(11) NOT NULL UNIQUE AUTO_INCREMENT,
-    `DistributionID` int(11) NOT NULL,
-    `Instance` int(11) NOT NULL,
-    `PointsPossible` int(11) DEFAULT 0 NOT NULL,
-    PRIMARY KEY (`AssignmentID`)
-) ENGINE=InnoDB;
+/* Insert values into Assignment table */
+INSERT INTO Assignment (assignment_id, category, percentage, course_id)
+VALUES (1, 'Assignments', 15.0, 1),
+       (2, 'Midterm', 30.0, 1),
+       (3, 'Project', 15.0, 1),
+       (4, 'Final Exam', 40.0, 1);
 
+/* Insert values into Grades table */
+INSERT INTO Grades (grade_id, assignment_id, student_id, score)
+VALUES (1, 1, 1, 6.5),
+       (2, 2, 1, 92.0),
+       (3, 3, 1, 75.0),
+       (4, 4, 1, 88.0),
+       (5, 1, 2, 9.0),
+       (6, 2, 2, 84.5),
+       (7, 3, 2, 82.0),
+       (8, 4, 2, 92.0),
+       (9, 1, 3, 7.0),
+       (10, 2, 3, 78.0),
+       (11, 3, 3, 90.0),
+       (12, 4, 3, 95.0),
+       (13, 2, 4, 78.0),
+       (14, 3, 4, 70.0),
+       (15, 4, 4, 85.0);
 
+/* 3. Show the tables with the contents that you have inserted */ 
 
+SELECT * FROM Course;
+SELECT * FROM Student;
+SELECT * FROM Assignment;
+SELECT * FROM Grades;
 
-DROP TABLE IF EXISTS `DISTRIBUTION`;
-CREATE TABLE `DISTRIBUTION` (
-    `DistributionID` int(11) NOT NULL UNIQUE,
-    `CourseID` int(11) NOT NULL,
-    `CategoryName` varchar(30) NOT NULL,
-    `Percentage` int(11) NOT NULL,
-    PRIMARY KEY(`DistributionID`)
-) ENGINE=InnoDB;
+/* 5. Retrieve all students in a given course (e.g., course_id = 1): */
 
+SELECT s.* FROM Student s
+JOIN Course c ON s.course_id = c.course_id
+WHERE c.course_id = 1;
 
+/* 4. Retrieve average/highest/lowest score of an assignment (e.g., assignment_id = 2): */
 
+/* Average score */
+SELECT AVG(score) AS average_score
+FROM Grades
+WHERE assignment_id = 2;
 
-DROP TABLE IF EXISTS `ENROLLMENT`;
-CREATE TABLE `ENROLLMENT` (
-    `StudentID` int(11) NOT NULL,
-    `CourseID` int(11) NOT NULL,
-    PRIMARY KEY (`StudentID`, `CourseID`)
-) ENGINE=InnoDB;
+/* Highest score */
+SELECT MAX(score) AS highest_score
+FROM Grades
+WHERE assignment_id = 2;
 
+/* Lowest score */
+SELECT MIN(score) AS lowest_score
+FROM Grades
+WHERE assignment_id = 2;
 
+/* 6. Retrieve all students in a given course and all of their scores on every assignmnet (e.g., course_id = 1): */
+SELECT s.first_name, s.last_name, a.assignment_id, a.category, g.score
+FROM Student s
+JOIN Grades g ON s.student_id = g.student_id
+JOIN Assignment a ON g.assignment_id = a.assignment_id
+WHERE a.course_id = 1
+ORDER BY s.last_name, s.first_name, a.assignment_id;
 
+/* 7. Add an assignment to a course (e.g., course_id = 1): */
 
-DROP TABLE IF EXISTS `COURSE`;
-CREATE TABLE `COURSE` (
-    `Department` varchar(255) NOT NULL,
-    `CourseNumber` int(11) NOT NULL,
-    `CourseName` varchar(255) NOT NULL,
-    `Term` varchar(255) NOT NULL,
-    `Year` int(5) NOT NULL,
-    `CourseID` int(11) NOT NULL UNIQUE AUTO_INCREMENT,
-    PRIMARY KEY(`CourseID`)
-) ENGINE=InnoDB;
+INSERT INTO Assignment (assignment_id, category, percentage, course_id)
+VALUES (5, 'Extra Credit', 10.0, 1);
 
+/* 8. Change the percentages of categories for a course (e.g., course_id = 1, new percentage for Homework = 30%): */
 
+UPDATE Assignment
+SET percentage = 30.0
+WHERE category = 'Assignments' AND course_id = 1;
 
+/* 9. Add 2 points to the score of each student on an assignment (e.g., assignment_id = 3) */
 
-INSERT INTO `STUDENT` VALUES('Richard', 'Hendricks', 'Computer Science', 1234);
-INSERT INTO `STUDENT` VALUES('Jared', 'Dunn', 'Management Science', 5678);
-INSERT INTO `STUDENT` VALUES('Erlich', 'Bachman', 'Aviato', 3456);
-INSERT INTO `STUDENT` VALUES('Jimmy', 'Quoyang', 'Marine Biology', 4590);
-INSERT INTO `STUDENT` VALUES('Dinesh', 'Gilfoyle', 'Computer Engineering', 5337);
-INSERT INTO `STUDENT` VALUES('John', 'Doe', 'English', 5555);
-INSERT INTO `COURSE` VALUES('Math', 157, 'Calculus-2', 'Fall', 2017, 85675);
-INSERT INTO `COURSE` VALUES('Computer Science', 350, 'Programming Languages', 'Spring', 2017, 89994);
-INSERT INTO `COURSE` VALUES('English', 109, 'Technical Writing', 'Fall', 2016, 56738);
-INSERT INTO `COURSE` VALUES('Computer Science', 533, 'Senior Project', 'Spring', 2017, 90573);
-INSERT INTO `COURSE` VALUES('Physics', 100, 'Mechanics', 'Fall', 2016, 48387);
-INSERT INTO `ENROLLMENT` VALUES(1234, 85675);
-INSERT INTO `ENROLLMENT` VALUES(5678, 85675);
-INSERT INTO `ENROLLMENT` VALUES(3456, 85675);
-INSERT INTO `ENROLLMENT` VALUES(4590, 85675);
-INSERT INTO `ENROLLMENT` VALUES(5337, 85675);
-INSERT INTO `ENROLLMENT` VALUES(5555, 85675);
-INSERT INTO `ENROLLMENT` VALUES(1234, 56738);
-INSERT INTO `ENROLLMENT` VALUES(5678, 56738);
-INSERT INTO `ENROLLMENT` VALUES(3456, 56738);
-INSERT INTO `ENROLLMENT` VALUES(4590, 56738);
-INSERT INTO `ENROLLMENT` VALUES(5337, 56738);
-INSERT INTO `ENROLLMENT` VALUES(5555, 56738);
-INSERT INTO `ENROLLMENT` VALUES(1234, 89994);
-INSERT INTO `ENROLLMENT` VALUES(1234, 90573);
-INSERT INTO `ENROLLMENT` VALUES(1234, 48387);
-INSERT INTO `ENROLLMENT` VALUES(5337, 90573);
-INSERT INTO `DISTRIBUTION` VALUES(1, 85675, 'Quiz', 50);
-INSERT INTO `DISTRIBUTION` VALUES(2, 85675, 'HW', 10);
-INSERT INTO `DISTRIBUTION` VALUES(3, 85675, 'MidTerm', 20);
-INSERT INTO `DISTRIBUTION` VALUES(4, 85675, 'Final', 20);
-INSERT INTO `DISTRIBUTION` VALUES(5, 89994, 'Participation', 40);
-INSERT INTO `DISTRIBUTION` VALUES(6, 89994, 'HW', 10);
-INSERT INTO `DISTRIBUTION` VALUES(7, 89994, 'MidTerm', 25);
-INSERT INTO `DISTRIBUTION` VALUES(8, 89994, 'Final', 25);
-INSERT INTO `DISTRIBUTION` VALUES(9, 56738, 'Quiz', 40);
-INSERT INTO `DISTRIBUTION` VALUES(10, 56738, 'HW', 15);
-INSERT INTO `DISTRIBUTION` VALUES(11, 56738, 'MidTerm', 20);
-INSERT INTO `DISTRIBUTION` VALUES(12, 56738, 'Final', 25);
-INSERT INTO `DISTRIBUTION` VALUES(13, 90573, 'Quiz', 20);
-INSERT INTO `DISTRIBUTION` VALUES(14, 90573, 'HW', 25);
-INSERT INTO `DISTRIBUTION` VALUES(15, 90573, 'Project', 30);
-INSERT INTO `DISTRIBUTION` VALUES(16, 90573, 'Final', 25);
-INSERT INTO `DISTRIBUTION` VALUES(17, 48387, 'Quiz', 30);
-INSERT INTO `DISTRIBUTION` VALUES(18, 48387, 'HW', 25);
-INSERT INTO `DISTRIBUTION` VALUES(19, 48387, 'Project', 20);
-INSERT INTO `DISTRIBUTION` VALUES(20, 48387, 'Final', 25);
-INSERT INTO `ASSIGNMENT` VALUES(1, 1, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(2, 1, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(3, 2, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(4, 2, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(5, 3, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(6, 3, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(7, 4, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(8, 4, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(9, 5, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(10, 5, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(11, 6, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(12, 6, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(13, 7, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(14, 7, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(15, 8, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(16, 8, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(17, 9, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(18, 9, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(19, 10, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(20, 10, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(21, 11, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(22, 11, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(23, 12, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(24, 12, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(25, 13, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(26, 13, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(27, 14, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(28, 14, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(29, 15, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(30, 15, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(31, 16, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(32, 16, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(33, 17, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(34, 17, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(35, 18, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(36, 18, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(37, 19, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(38, 19, 2, 100);
-INSERT INTO `ASSIGNMENT` VALUES(39, 20, 1, 100);
-INSERT INTO `ASSIGNMENT` VALUES(40, 20, 2, 100);
-INSERT INTO `SCORE` VALUES(1234, 1, 85);
-INSERT INTO `SCORE` VALUES(5678, 1, 80);
-INSERT INTO `SCORE` VALUES(3456, 1, 95);
-INSERT INTO `SCORE` VALUES(4590, 1, 65);
-INSERT INTO `SCORE` VALUES(5337, 1, 100);
-INSERT INTO `SCORE` VALUES(5555, 1, 93);
-INSERT INTO `SCORE` VALUES(1234, 2, 81);
-INSERT INTO `SCORE` VALUES(5678, 2, 84);
-INSERT INTO `SCORE` VALUES(3456, 2, 95);
-INSERT INTO `SCORE` VALUES(4590, 2, 62);
-INSERT INTO `SCORE` VALUES(5337, 2, 90);
-INSERT INTO `SCORE` VALUES(5555, 2, 93);
-INSERT INTO `SCORE` VALUES(1234, 18, 87);
-INSERT INTO `SCORE` VALUES(5678, 18, 94);
-INSERT INTO `SCORE` VALUES(3456, 18, 55);
-INSERT INTO `SCORE` VALUES(4590, 18, 72);
-INSERT INTO `SCORE` VALUES(5337, 18, 0);
-INSERT INTO `SCORE` VALUES(5555, 18, 99);
-INSERT INTO `SCORE` VALUES(1234, 16, 80);
-INSERT INTO `SCORE` VALUES(1234, 30, 85);
-INSERT INTO `SCORE` VALUES(1234, 40, 95);
-INSERT INTO `SCORE` VALUES(5338, 26, 78);
-INSERT INTO `SCORE` VALUES(1234, 3, 81);
-INSERT INTO `SCORE` VALUES(5678, 3, 84);
-INSERT INTO `SCORE` VALUES(3456, 3, 95);
-INSERT INTO `SCORE` VALUES(4590, 3, 62);
-INSERT INTO `SCORE` VALUES(5337, 3, 90);
-INSERT INTO `SCORE` VALUES(5555, 3, 93);
-INSERT INTO `SCORE` VALUES(1234, 4, 81);
-INSERT INTO `SCORE` VALUES(5678, 4, 84);
-INSERT INTO `SCORE` VALUES(3456, 4, 95);
-INSERT INTO `SCORE` VALUES(4590, 4, 62);
-INSERT INTO `SCORE` VALUES(5337, 4, 90);
-INSERT INTO `SCORE` VALUES(5555, 4, 93);
-INSERT INTO `SCORE` VALUES(1234, 5, 81);
-INSERT INTO `SCORE` VALUES(5678, 5, 84);
-INSERT INTO `SCORE` VALUES(3456, 5, 95);
-INSERT INTO `SCORE` VALUES(4590, 5, 62);
-INSERT INTO `SCORE` VALUES(5337, 5, 90);
-INSERT INTO `SCORE` VALUES(5555, 5, 93);
-INSERT INTO `SCORE` VALUES(1234, 6, 81);
-INSERT INTO `SCORE` VALUES(5678, 6, 84);
-INSERT INTO `SCORE` VALUES(3456, 6, 95);
-INSERT INTO `SCORE` VALUES(4590, 6, 62);
-INSERT INTO `SCORE` VALUES(5337, 6, 90);
-INSERT INTO `SCORE` VALUES(5555, 6, 93);
-INSERT INTO `SCORE` VALUES(1234, 7, 81);
-INSERT INTO `SCORE` VALUES(5678, 7, 84);
-INSERT INTO `SCORE` VALUES(3456, 7, 95);
-INSERT INTO `SCORE` VALUES(4590, 7, 62);
-INSERT INTO `SCORE` VALUES(5337, 7, 90);
-INSERT INTO `SCORE` VALUES(5555, 7, 93);
-INSERT INTO `SCORE` VALUES(1234, 8, 81);
-INSERT INTO `SCORE` VALUES(5678, 8, 84);
-INSERT INTO `SCORE` VALUES(3456, 8, 95);
-INSERT INTO `SCORE` VALUES(4590, 8, 62);
-INSERT INTO `SCORE` VALUES(5337, 8, 90);
-INSERT INTO `SCORE` VALUES(5555, 8, 93);
-INSERT INTO `SCORE` VALUES(1234, 9, 81);
-INSERT INTO `SCORE` VALUES(5678, 9, 84);
-INSERT INTO `SCORE` VALUES(3456, 9, 95);
-INSERT INTO `SCORE` VALUES(4590, 9, 62);
-INSERT INTO `SCORE` VALUES(5337, 9, 90);
-INSERT INTO `SCORE` VALUES(5555, 9, 93);
-INSERT INTO `SCORE` VALUES(1234, 10, 81);
-INSERT INTO `SCORE` VALUES(5678, 10, 84);
-INSERT INTO `SCORE` VALUES(3456, 10, 95);
-INSERT INTO `SCORE` VALUES(4590, 10, 62);
-INSERT INTO `SCORE` VALUES(5337, 10, 90);
-INSERT INTO `SCORE` VALUES(5555, 10, 93);
-INSERT INTO `SCORE` VALUES(1234, 12, 87);
-INSERT INTO `SCORE` VALUES(5678, 12, 94);
-INSERT INTO `SCORE` VALUES(3456, 12, 55);
-INSERT INTO `SCORE` VALUES(4590, 12, 72);
-INSERT INTO `SCORE` VALUES(5337, 12, 0);
-INSERT INTO `SCORE` VALUES(5555, 12, 99);
-INSERT INTO `SCORE` VALUES(1234, 13, 87);
-INSERT INTO `SCORE` VALUES(5678, 13, 94);
-INSERT INTO `SCORE` VALUES(3456, 13, 55);
-INSERT INTO `SCORE` VALUES(4590, 13, 72);
-INSERT INTO `SCORE` VALUES(5337, 13, 0);
-INSERT INTO `SCORE` VALUES(5555, 13, 99);
-INSERT INTO `SCORE` VALUES(5337, 26, 78);
-INSERT INTO `SCORE` VALUES(5337, 28, 78);
+UPDATE Grades
+SET score = score + 2
+WHERE assignment_id = 3;
 
+/* 10. Add 2 points to the score of students whose last name contains a 'Q' */
 
-SELECT a.AssignmentID, AVG(s.POINTS) AS AverageScore, MAX(s.POINTS) AS HighestScore, MIN(s.POINTS) AS LowestScore
-FROM SCORE s
-JOIN ASSIGNMENT a ON s.AssignmentID = a.AssignmentID
-GROUP BY a.AssignmentID;
+UPDATE Grades
+SET score = score + 2
+WHERE assignment_id = 1 AND student_id IN (
+  SELECT student_id FROM Student s 
+  WHERE s.last_name LIKE '%Q%'
+);
 
+SELECT s.first_name, s.last_name, g.score
+FROM Student s
+JOIN Grades g ON s.student_id = g.student_id
+JOIN Assignment a ON g.assignment_id = a.assignment_id
+WHERE s.last_name LIKE '%Q%';
 
-SELECT s.StudentID, s.FirstName, s.LastName
-FROM STUDENT s
-JOIN ENROLLMENT e ON s.StudentID = e.StudentID
-WHERE e.CourseID = 85675;
+/* 11. Compute the grade for a student (e.g., student_id = 1): */
 
+SELECT s.first_name, s.last_name, SUM(a.percentage * g.score / 100) AS grade
+FROM Student s
+JOIN Grades g ON s.student_id = g.student_id
+JOIN Assignment a ON g.assignment_id = a.assignment_id
+WHERE s.student_id = 1
+GROUP BY s.first_name, s.last_name;
 
-SELECT s.StudentID, s.FirstName, s.LastName, a.AssignmentID, sc.POINTS
-FROM STUDENT s
-JOIN ENROLLMENT e ON s.StudentID = e.StudentID
-JOIN SCORE sc ON s.StudentID = sc.StudentID
-JOIN ASSIGNMENT a ON sc.AssignmentID = a.AssignmentID
-WHERE e.CourseID = 85675
-ORDER BY s.StudentID, a.AssignmentID;
+/* 12. Compute the grade for a student, where the lowest score for a given category is dropped (e.g., student_id = 2): */ 
 
-
-SELECT DistributionID FROM DISTRIBUTION WHERE CourseID = 85675 AND CategoryName = 'HW';
-
-
-INSERT INTO ASSIGNMENT (DistributionID, Instance, PointsPossible) VALUES (2, 3, 100);
-
-
-UPDATE DISTRIBUTION
-SET Percentage = 30
-WHERE CourseID = 85675 AND CategoryName = 'HW';
-
-
-UPDATE SCORE
-SET POINTS = POINTS + 2
-WHERE AssignmentID = 1;
-
-
-UPDATE SCORE s
-JOIN STUDENT st ON s.StudentID = st.StudentID
-SET s.POINTS = s.POINTS + 2
-WHERE st.LastName LIKE '%Q%' AND s.AssignmentID = 1;
-
-
-SELECT s.StudentID, s.FirstName, s.LastName,
-       SUM((sc.POINTS / a.PointsPossible) * d.Percentage) AS WeightedScore
-FROM STUDENT s
-JOIN SCORE sc ON s.StudentID = sc.StudentID
-JOIN ASSIGNMENT a ON sc.AssignmentID = a.AssignmentID
-JOIN DISTRIBUTION d ON a.DistributionID = d.DistributionID
-JOIN COURSE c ON d.CourseID = c.CourseID
-WHERE s.StudentID = 1234 AND c.CourseID = 85675
-GROUP BY s.StudentID;
-
-
-WITH ScoreDetails AS (
-    SELECT
-        s.StudentID,
-        d.CourseID,
-        d.CategoryName,
-        a.PointsPossible,
-        sc.POINTS AS PointsEarned,
-        d.Percentage,
-        ROW_NUMBER() OVER(PARTITION BY s.StudentID, d.CategoryName ORDER BY sc.POINTS ASC) AS ScoreRank,
-        COUNT(sc.AssignmentID) OVER(PARTITION BY s.StudentID, d.CategoryName) AS TotalAssignments
-    FROM STUDENT s
-    JOIN SCORE sc ON s.StudentID = sc.StudentID
-    JOIN ASSIGNMENT a ON sc.AssignmentID = a.AssignmentID
-    JOIN DISTRIBUTION d ON a.DistributionID = d.DistributionID
-    JOIN COURSE c ON d.CourseID = c.CourseID
-    WHERE s.StudentID = 1234 -- Example StudentID
-      AND c.CourseID = 85675 -- Example CourseID
-),
-FilteredScores AS (
-    SELECT
-        StudentID,
-        CourseID,
-        CategoryName,
-        SUM(PointsEarned) AS PointsEarnedSum,
-        SUM(PointsPossible) AS PointsPossibleSum,
-        Percentage
-    FROM ScoreDetails
-    WHERE ScoreRank > 1 OR TotalAssignments = 1
-    GROUP BY StudentID, CourseID, CategoryName, Percentage
-)
-SELECT
-    StudentID,
-    SUM((PointsEarnedSum / PointsPossibleSum) * Percentage) / 100 AS FinalGrade
-FROM FilteredScores
-GROUP BY StudentID;
+SELECT s.first_name, s.last_name, SUM((g.score - lowest_score.min_score) * a.percentage / 100) AS grade
+FROM Student s
+JOIN Grades g ON s.student_id = g.student_id
+JOIN Assignment a ON g.assignment_id = a.assignment_id
+JOIN (
+    SELECT assignment_id, MIN(score) as min_score
+    FROM Grades
+    GROUP BY assignment_id
+) lowest_score ON g.assignment_id = lowest_score.assignment_id AND g.score != lowest_score.min_score
+WHERE s.student_id = 2
+GROUP BY s.first_name, s.last_name;
